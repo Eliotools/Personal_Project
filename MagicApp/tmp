@@ -1,0 +1,153 @@
+import React from 'react'
+import { ScrollView, StyleSheet, View, TextInput, Button, Text, FlatList, ActivityIndicator } from 'react-native'
+import FilmItem from './FilmItem'
+import { getCardsFromApiWithSearchedText } from '../API/TMDB'
+import Collapsible from 'react-native-collapsible'
+
+class Search extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+             Cards: [],
+             isLoading: false,
+             searchedText: "",
+             isCollapsed: true,
+             isScrolling: false,
+             dict: {
+               'cmc': "",
+               'colors': "",
+               'name': ""
+            }
+             }
+    }
+
+    _loadCards() {
+        if (this._dictEmplty()) {
+        this.setState({ isLoading: true })
+        this._displayDict()
+        getCardsFromApiWithSearchedText(this.state.dict).then(data => {
+            this.setState({ 
+                Cards: data.cards,
+                isLoading: false
+            })
+        })
+        }
+    }
+    _displayDict()
+    {
+      for (const [key, value] of Object.entries(this.state.dict)) {
+        //console.log(key, value);
+      }
+    } 
+    _dictEmplty()
+    {
+      for (const [key, value] of Object.entries(this.state.dict)) {
+        if(value.length != 0) {
+          return (true)
+        }
+      }
+      return (false)
+    } 
+    
+    _displayLoading() {
+        if (this.state.isLoading) {
+          return (
+            <View style={styles.loading_container}>
+              <ActivityIndicator size='large' />
+            </View>
+          )
+        }
+      }
+
+    _searchTextInputChanged(type, text) {
+        this.state.dict[type] = text 
+    }
+
+    _collapsing() {
+      if (this.state.isCollapsed === true) {
+        this.setState({
+          isCollapsed: false
+        })
+      } else {
+      this.setState({
+        isCollapsed: true
+      })
+      }
+      console.log(this.state.isCollapsed)
+    }
+
+    _scrolling(event: Object) {
+      const scroll = event.nativeEvent.contentOffset.y;
+      if (scroll <= 10) {
+        this.setState({
+          isScrolling: false
+        })
+      } else {
+      this.setState({
+        isScrolling: true
+      })
+      }
+      console.log(this.state.isScrolling)
+      console.log(event.nativeEvent.contentOffset.y)
+    }
+
+    render() {
+        return (
+        <ScrollView style={styles.main_container}>
+        
+            <TextInput style={styles.textinput} 
+              placeholder='Name'
+              onChangeText={(text) => this._searchTextInputChanged('name', text)}
+            />
+          <Collapsible collapsed={this.state.isCollapsed}>
+            <TextInput style={styles.textinput} 
+              placeholder='CMC'
+              onChangeText={(text) => this._searchTextInputChanged('cmc', text)}
+            />
+            <TextInput style={styles.textinput} 
+              placeholder='Colors' 
+              onChangeText={(text) => this._searchTextInputChanged('Colors', text)}
+            />
+          </Collapsible>
+          <Button 
+            onPress={() => this._collapsing()}
+            title="Collaspe"
+          />
+          <Button title='Rechercher' onPress={() => this._loadCards()}/>
+        
+        
+        {this._displayLoading()}
+        <FlatList
+          data={this.state.Cards}
+          onScroll={(event) => this._scrolling(event)}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({item}) => <FilmItem film={item}/>}
+        />
+
+        </ScrollView>
+        )
+}
+}
+
+const styles = StyleSheet.create({
+  main_container: {
+    flex: 1,
+    marginTop: 20
+  },
+  textinput: {
+    marginLeft: 5,
+    marginRight: 5,
+    height: 50,
+    paddingLeft: 5
+  },
+  loading_container: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 100,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center'
+  }
+})
+export default Search
