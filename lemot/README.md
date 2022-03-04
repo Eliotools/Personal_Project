@@ -1,4 +1,4 @@
-#LEMOT
+# LEMOT
 
 This project is a wordle solver for wordle.louan.me
 
